@@ -8,7 +8,6 @@ import {
   Spacer,
   Circle,
 } from '@chakra-ui/react';
-import { todoService } from '../../lib/dependencies';
 
 import { CheckIcon, CloseIcon } from '@chakra-ui/icons';
 

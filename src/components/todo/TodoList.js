@@ -43,7 +43,7 @@ export default function TodoList({ filter }) {
 
   useEffect(() => {
     getTodoList();
-  }, []);
+  });
 
   return (
     <Accordion allowMultiple>
