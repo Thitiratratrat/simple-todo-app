@@ -1,38 +1,35 @@
 class TodoService {
-  constructor() {
-    this.data = [
-      { id: '1', title: 'hello', body: 'hello not done fucker', isComplete: false },
-      { id: '2', title: 'hello', body: 'hello fucker', isComplete: false },
-    ];
+  constructor(client) {
+    this.client = client;
   }
 
-  getIncompleteTodoList() {
-    return this.data;
+  async getIncompleteTodoList() {
+    const response = await this.client.get('notdone');
+
+    return response.data;
   }
 
-  getCompletedTodoList() {
-    return [
-      {
-        id: '1',
-        title: 'hello',
-        body: 'hello not done fucker',
-        isComplete: true,
-      },
-      { id: '2', title: 'hello', body: 'hello fucker', isComplete: true },
-    ];
+  async getCompletedTodoList() {
+    const response = await this.client.get('done');
+
+    return response.data;
   }
 
-  completeTodo(id) {
-    this.data[id].isComplete = true;
+  async completeTodo(id) {
+    const response = await this.client.put(`${id}`, { isComplete: true });
 
-    return this.data[id];
+    return response.data;
   }
 
-  deleteTodo(id) {
-    this.data = this.data.filter((todo) => todo !== id);
+  async deleteTodo(id) {
+    const response = await this.client.delete(`${id}`);
+
+    return response.data;
   }
 
-  addTodo(text, body) {}
+  async addTodo(title, body) {
+    await this.client.post('', { title, body });
+  }
 }
 
 export default TodoService;

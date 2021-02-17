@@ -2,59 +2,73 @@ import { Accordion } from '@chakra-ui/react';
 import TodoItem from './TodoItem';
 import { todoService } from '../../lib/dependencies';
 import { useState, useEffect } from 'react';
+import Spinner from '../loader/Spinner';
+import { useRecoilState } from 'recoil';
+import shouldUpdateTodoListAtom from '../../atoms/shouldUpdateTodoList';
 
 export default function TodoList({ filter }) {
-  const [todoList, setTodoList] = useState([
-    {
-      id: '1',
-      title: 'hello',
-      body: 'hello not done fucker',
-      isComplete: false,
-    },
-    { id: '2', title: 'hello', body: 'hello fucker', isComplete: true },
-  ]);
+  const [todoList, setTodoList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [shouldUpdateTodoList, setShouldUpdateTodoList] = useRecoilState(
+    shouldUpdateTodoListAtom
+  );
 
-  function getTodoList() {
+  async function getTodoList() {
+    let todoList = [];
+
     if (filter === 'to do') {
-      setTodoList(todoService.getIncompleteTodoList());
+      todoList = await todoService.getIncompleteTodoList();
+      todoList = todoList.map((todo) => {
+        return { ...todo, isComplete: false };
+      });
     } else {
-      setTodoList(todoService.getCompletedTodoList());
+      todoList = await todoService.getCompletedTodoList();
+      todoList = todoList.map((todo) => {
+        return { ...todo, isComplete: true };
+      });
     }
+    setIsLoading(false);
+
+    setTodoList(todoList);
+    setShouldUpdateTodoList(false);
   }
 
-  function onComplete(id) {
-    // todoService.completeTodo(id);
+  async function onComplete(id) {
+    setIsLoading(true);
+    await todoService.completeTodo(id);
 
-    // const updateTodo = todoList.find((todo) => todo.id === id);
-    // updateTodo.status = true;
-    // const newTodoList = todoList.filter((todo) => todo.id !== id);
-
-    // newTodoList.push(updateTodo);
-    getTodoList();
+    setShouldUpdateTodoList(true);
   }
 
-  function onDelete(id) {
-    // todoService.deleteTodo(id);
+  async function onDelete(id) {
+    setIsLoading(true);
+    await todoService.deleteTodo(id);
 
-    // const newTodoList = todoList.filter((todo) => todo.id !== id);
-
-    getTodoList();
+    setShouldUpdateTodoList(true);
   }
 
   useEffect(() => {
-    getTodoList();
-  });
+    if (shouldUpdateTodoList) {
+      setIsLoading(true);
+      getTodoList();
+    }
+  }, [shouldUpdateTodoList]);
 
   return (
-    <Accordion allowMultiple>
-      {todoList.map((todo) => (
-        <TodoItem
-          {...todo}
-          onComplete={onComplete}
-          onDelete={onDelete}
-          key={todo.id}
-        />
-      ))}
-    </Accordion>
+    <div>
+      {isLoading && <Spinner />}
+      {!isLoading && (
+        <Accordion allowMultiple>
+          {todoList.map((todo) => (
+            <TodoItem
+              {...todo}
+              onComplete={onComplete}
+              onDelete={onDelete}
+              key={todo.id}
+            />
+          ))}
+        </Accordion>
+      )}
+    </div>
   );
 }
